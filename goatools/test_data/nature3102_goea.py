@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2016-2018, DV Klopfenstein, H Tang. All rights re
 __author__ = "DV Klopfenstein"
 
 import os
-import pandas as pd
+import xlrd
 
 from tests.utils import repofn
 from goatools.test_data.genes_NCBI_10090_ProteinCoding import GENEID2NT as GeneID2nt_mus
@@ -41,14 +41,21 @@ def get_geneid2symbol(fin_xlsx):
     gene2symbol = {}
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nbt_3102")
     tbl_genes = f"{data_dir}/{fin_xlsx}"
-    df = pd.read_excel(
-        tbl_genes, engine="openpyxl", header=None, names=["Symbol", "GeneID", "Desc"]
-    )
-    for _, row in df.iterrows():
-        symbol = row["Symbol"]
-        geneid = int(row["GeneID"])
+    # pandas does not load in cygwin due to its list of prerequisies
+    # Keeping my version of GOA Tools light
+    #### df = pd.read_excel(
+    ####     tbl_genes, engine="openpyxl", header=None, names=["Symbol", "GeneID", "Desc"]
+    #### )
+    book = xlrd.open_workbook(tbl_genes)
+    sheet = book.sheet_by_index(0)
+    #### for _, row in df.iterrows():
+    for rownum in range(sheet.nrows):
+        symbol, geneid, _ = [sheet.cell_value(rownum, c) for c in range(sheet.ncols)]
+        #### symbol = row["Symbol"]
+        #### geneid = int(row["GeneID"])
+        #### geneid = int(row["GeneID"])
         if geneid:
-            gene2symbol[geneid] = symbol
+            gene2symbol[int(geneid)] = symbol
     return gene2symbol
 
 
